@@ -16,18 +16,8 @@ public class Day1 {
             System.exit(1);
         }
 
-        for (int i = 0; i < content.size()-1; i++) {
-            if (content.get(i+1) > content.get(i)) {
-                part1count++;
-            }
-        }
-
-        for (int i = 0; i < content.size()-3; i++) {
-            int last = sum(content.subList(i, i+3));
-            int current = sum(content.subList(i+1, i+4));
-            if (current > last)
-                part2count++;
-        }
+        part1count = slidingWindowSum(content, 1);
+        part2count = slidingWindowSum(content, 3);
 
         System.out.printf("Part 1: %d%n", part1count);
         System.out.printf("Part 2: %d%n", part2count);
@@ -38,5 +28,16 @@ public class Day1 {
         for (int n : list)
             sum += n;
         return sum;
+    }
+
+    static int slidingWindowSum(List<Integer> values, int windowSize) {
+        int count = 0;
+        for (int i = 0; i < values.size() - windowSize; i++) {
+            int last = sum(values.subList(i, i + windowSize));
+            int current = sum(values.subList(i + 1, i + windowSize + 1));
+            if (current > last)
+                count++;
+        }
+        return count;
     }
 }
