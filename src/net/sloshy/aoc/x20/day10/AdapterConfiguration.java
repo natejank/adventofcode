@@ -62,7 +62,9 @@ class AdapterConfiguration {
     }
 
     public boolean meetsRequirements(int required) {
-        return meetsRequirements(chain.getLast(), required);
+        if (chain.size() > 1)
+            return meetsRequirements(chain.getLast(), required);
+        return false;
     }
 
 
