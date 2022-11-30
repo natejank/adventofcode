@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Day10 {
+    static int part2Configs = 0;
     public static void main(String[] args) {
         int part1 = 0;
         int part2 = 0;
@@ -16,8 +17,11 @@ public class Day10 {
         }
         Collections.sort(bag);
         bag.add(bag.get(bag.size()-1) + 3);  // our device!
+        System.out.println(bag);
 
         part1 = part1(bag);
+        part2(new AdapterConfiguration(bag));
+        part2 = part2Configs;
 
         System.out.printf("Part 1: %d%n", part1);
         System.out.printf("Part 2: %d%n", part2);
@@ -36,6 +40,16 @@ public class Day10 {
             previous = adapter;
         }
         return one * three;
+    }
+
+    public static void part2(AdapterConfiguration adapter) {
+        if (adapter.isSolution()) {
+            part2Configs++;
+        }
+        var children = adapter.getChildren();
+        for (var child : children) {
+            part2(child);
+        }
     }
 }
 
