@@ -21,7 +21,7 @@ public class Day2 {
 
         var day2 = new Day2(input);
         int part1 = day2.part1();
-        int part2 = 0;
+        int part2 = day2.part2();
 
         System.out.printf("Part 1: %d%n", part1);
         System.out.printf("Part 2: %d%n", part2);
@@ -34,6 +34,7 @@ public class Day2 {
         TIE(3),
         ;
         public final int points;
+
         Result(int points) {
             this.points = points;
         }
@@ -51,9 +52,11 @@ public class Day2 {
         SCISSORS(3),
         ;
         public final int points;
+
         Move(int points) {
             this.points = points;
         }
+
         @Override
         public String toString() {
             return "%s (%d)".formatted(super.toString(), points);
@@ -80,41 +83,86 @@ public class Day2 {
     }
 
     public int part2() {
-
+        int points = 0;
+        for (var match : guide) {
+            var theirs = decryptMove(match[0]);
+            var result = decryptResult(match[1]);
+            var yours = getResultPairing(theirs).get(result);
+            var matchPoints = yours.points + result.points;
+            points += matchPoints;
+        }
+        return points;
     }
 
+    /**
+     * Gets the match result of your move and an opponents move
+     *
+     * @param yours  your move
+     * @param theirs your opponents move
+     * @return the match result
+     */
     public static Result getMatchResult(Move yours, Move theirs) {
         if (yours == theirs)
             return Result.TIE;
-        else if (theirs == getWinPairing(yours))
+        else if (yours == getResultPairing(theirs).get(Result.WIN))
             return Result.WIN;
         else
             return Result.LOSS;
     }
 
-    public static Move getWinPairing(Move move) {
-        return switch(move) {
-            case ROCK     -> Move.SCISSORS;
-            case PAPER    -> Move.ROCK;
-            case SCISSORS -> Move.PAPER;
+    /**
+     * Gets the move required for any result of an encounter
+     *
+     * @param move the opponent's move
+     * @return results mapped to their required moves
+     */
+    public static Map<Result, Move> getResultPairing(Move move) {
+        return switch (move) {
+            case ROCK -> Map.of(
+                    Result.WIN, Move.PAPER,
+                    Result.LOSS, Move.SCISSORS,
+                    Result.TIE, Move.ROCK
+            );
+            case PAPER -> Map.of(
+                    Result.WIN, Move.SCISSORS,
+                    Result.LOSS, Move.ROCK,
+                    Result.TIE, Move.PAPER
+            );
+            case SCISSORS -> Map.of(
+                    Result.WIN, Move.ROCK,
+                    Result.LOSS, Move.PAPER,
+                    Result.TIE, Move.SCISSORS
+            );
         };
     }
 
+    /**
+     * Decodes the book values
+     *
+     * @param move the encoded move value
+     * @return the pertaining move
+     */
     public static Move decryptMove(char move) {
         return switch (move) {
             case 'A', 'X' -> Move.ROCK;
             case 'B', 'Y' -> Move.PAPER;
             case 'C', 'Z' -> Move.SCISSORS;
-            default       -> throw new RuntimeException("Invalid Move!");
+            default -> throw new RuntimeException("Invalid Move!");
         };
     }
 
+    /**
+     * Decodes a result
+     *
+     * @param result the encoded result
+     * @return the decoded result
+     */
     public static Result decryptResult(char result) {
         return switch (result) {
             case 'X' -> Result.LOSS;
             case 'Y' -> Result.TIE;
             case 'Z' -> Result.WIN;
-            default  -> throw new RuntimeException("Invalid result!");
+            default -> throw new RuntimeException("Invalid result!");
         };
     }
 }
