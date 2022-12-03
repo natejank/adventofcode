@@ -2,6 +2,7 @@ package net.sloshy.aoc.x22;
 
 import net.sloshy.aoc.common.Utilities;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class Day3 {
@@ -16,7 +17,7 @@ public class Day3 {
         }
         var day3 = new Day3(input);
         int part1 = day3.part1();
-        int part2 = 0;
+        int part2 = day3.part2();
 
         System.out.printf("Part 1: %d%n", part1);
         System.out.printf("Part 2: %d%n", part2);
@@ -33,23 +34,40 @@ public class Day3 {
         for (var line : input) {
             var pocket1 = line.substring(0, line.length()/2);
             var pocket2 = line.substring(line.length()/2);
-            for (int i = 0; i < pocket1.length(); i++) {
-                var item = pocket1.charAt(i);
+            for (var item : pocket1.toCharArray()) {
                 // if pocket2 contains the char
                 if (pocket2.indexOf(item) >= 0) {
-                    int priority = 0;
-                    if (item >= UPPER_CASE && item <= UPPER_CASE + 25) {
-                        priority = (item - UPPER_CASE) + 27;
-                    } else if (item >= LOWER_CASE && item <= LOWER_CASE + 25) {
-                        priority = (item - LOWER_CASE) + 1;
-                    } else {
-                        throw new RuntimeException("Invalid character!");
-                    }
-                    priorities += priority;
+                    priorities += getPriority(item);
                     break;
                 }
             }
         }
         return priorities;
+    }
+
+    public int part2() {
+        int priorities = 0;
+        for (int i = 0; i <= input.size() - 3; i += 3) {
+            var group = input.subList(i, i + 3);
+            // sort to get the bag with the least items
+            group.sort(Comparator.comparingInt(String::length));
+            for (char item : group.get(0).toCharArray()) {
+                if (group.get(1).indexOf(item) >= 0 && group.get(2).indexOf(item) >= 0) {
+                    priorities += getPriority(item);
+                    break;
+                }
+            }
+        }
+        return priorities;
+    }
+
+    public int getPriority(char item) {
+        if (item >= UPPER_CASE && item <= UPPER_CASE + 25) {
+            return (item - UPPER_CASE) + 27;
+        } else if (item >= LOWER_CASE && item <= LOWER_CASE + 25) {
+            return (item - LOWER_CASE) + 1;
+        } else {
+            throw new RuntimeException("Invalid character!");
+        }
     }
 }
