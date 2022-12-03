@@ -14,18 +14,9 @@ public class Day2 {
                         line.charAt(0),  // 0: input
                         line.charAt(2)   // 1: response
                 });
-        if (input == null) {
-            System.err.println("Input file does not exist!");
-            return;
-        }
 
         var day2 = new Day2(input);
-        int part1 = day2.part1();
-        int part2 = day2.part2();
-
-        System.out.printf("Part 1: %d%n", part1);
-        System.out.printf("Part 2: %d%n", part2);
-
+        Utilities.printResult(day2.part1(), day2.part2());
     }
 
     public enum Result {

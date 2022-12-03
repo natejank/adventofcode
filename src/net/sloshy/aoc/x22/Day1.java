@@ -7,7 +7,15 @@ import java.util.Collections;
 import java.util.List;
 
 public class Day1 {
-    private ArrayList<Integer> elves;
+    public static void main(String[] args) {
+        var input = Utilities.getContent(args[0],
+                (String line) -> line.equals("") ?
+                        null : Integer.parseInt(line));
+        var day1 = new Day1(input);
+        Utilities.printResult(day1.part1(), day1.part2());
+    }
+
+    private final ArrayList<Integer> elves;
 
     public Day1(List<Integer> input) {
         elves = new ArrayList<>();
@@ -21,20 +29,6 @@ public class Day1 {
             }
         }
         Collections.sort(elves);
-    }
-
-    public static void main(String[] args) {
-        var input = Utilities.getContent(args[0],
-                (String line) -> line.equals("") ?
-                        null : Integer.parseInt(line));
-        if (input == null) {
-            System.err.println("Input file does not exist!");
-            System.exit(1);
-        }
-        var day1 = new Day1(input);
-
-        System.out.printf("Part 1: %d%n".formatted(day1.part1()));
-        System.out.printf("Part 2: %d%n".formatted(day1.part2()));
     }
 
     private int part1() {
