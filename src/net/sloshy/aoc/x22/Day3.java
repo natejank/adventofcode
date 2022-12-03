@@ -10,17 +10,8 @@ public class Day3 {
     public static final int UPPER_CASE = 65;
 
     public static void main(String[] args) {
-        var input = Utilities.getContent(args[0]);
-        if (input == null) {
-            System.err.println("Input file does not exist!");
-            return;
-        }
-        var day3 = new Day3(input);
-        int part1 = day3.part1();
-        int part2 = day3.part2();
-
-        System.out.printf("Part 1: %d%n", part1);
-        System.out.printf("Part 2: %d%n", part2);
+        var day3 = new Day3(Utilities.getContent(args[0]));
+        Utilities.printResult(day3.part1(), day3.part2());
     }
 
     private final List<String> input;
