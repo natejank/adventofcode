@@ -13,11 +13,11 @@ public class Day4 {
                     var elfValues = new int[2][2];
                     var elves = line.split(",");
                     // I'm tired 😭
-                    elfValues[0] = new int[] {
+                    elfValues[0] = new int[]{
                             Integer.parseInt(elves[0].split("-")[0]),
                             Integer.parseInt(elves[0].split("-")[1])
                     };
-                    elfValues[1] = new int[] {
+                    elfValues[1] = new int[]{
                             Integer.parseInt(elves[1].split("-")[0]),
                             Integer.parseInt(elves[1].split("-")[1])
                     };
@@ -27,6 +27,7 @@ public class Day4 {
     }
 
     List<int[][]> input;
+
     public Day4(List<int[][]> input) {
         this.input = input;
     }
@@ -45,6 +46,14 @@ public class Day4 {
     }
 
     public int part2() {
-        return 0;
+        int overlaps = 0;
+        for (var line : input) {
+            // lowest start first
+            Arrays.sort(line, Comparator.comparingInt((int[] a) -> a[0]));
+            // if the second array starts before the first ends
+            if (line[0][1] >= line[1][0])
+                overlaps++;
+        }
+        return overlaps;
     }
 }
