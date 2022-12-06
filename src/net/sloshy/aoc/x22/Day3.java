@@ -6,13 +6,13 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Day3 {
-    public static final int LOWER_CASE = 97;
-    public static final int UPPER_CASE = 65;
-
     public static void main(String[] args) {
         var day3 = new Day3(Utilities.getContent(args[0]));
         Utilities.printResult(day3.part1(), day3.part2());
     }
+
+    public static final int LOWER_CASE = 97;
+    public static final int UPPER_CASE = 65;
 
     private final List<String> input;
 
@@ -23,8 +23,8 @@ public class Day3 {
     public int part1() {
         int priorities = 0;
         for (var line : input) {
-            var pocket1 = line.substring(0, line.length()/2);
-            var pocket2 = line.substring(line.length()/2);
+            var pocket1 = line.substring(0, line.length() / 2);
+            var pocket2 = line.substring(line.length() / 2);
             for (var item : pocket1.toCharArray()) {
                 // if pocket2 contains the char
                 if (pocket2.indexOf(item) >= 0) {

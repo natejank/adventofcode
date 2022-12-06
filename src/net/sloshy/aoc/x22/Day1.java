@@ -8,6 +8,7 @@ import java.util.List;
 
 public class Day1 {
     public static void main(String[] args) {
+        // use null to separate elf groups
         var input = Utilities.getContent(args[0],
                 (String line) -> line.equals("") ?
                         null : Integer.parseInt(line));
@@ -19,25 +20,28 @@ public class Day1 {
 
     public Day1(List<Integer> input) {
         elves = new ArrayList<>();
-        int current = 0;
-        for (var line : input) {
+        int groupCalories = 0;
+        // sum all groups; we only care about aggregate calories
+        for (Integer line : input) {
             if (line != null) {
-                current += line;
+                groupCalories += line;
             } else {
-                elves.add(current);
-                current = 0;
+                // this group is over
+                elves.add(groupCalories);
+                groupCalories = 0;
             }
         }
+        // sort by number of calories
         Collections.sort(elves);
     }
 
     private int part1() {
-        // get the last elf
+        // get the last elf group
         return elves.get(elves.size() - 1);
     }
 
     private int part2() {
-        // get the last 3 elves
+        // get the last 3 groups
         return elves.subList(elves.size() - 3, elves.size())
                 // (safely) put them in an elf-slurry
                 .stream()

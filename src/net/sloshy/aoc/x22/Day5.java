@@ -2,6 +2,7 @@ package net.sloshy.aoc.x22;
 
 import net.sloshy.aoc.common.Utilities;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ public class Day5 {
 
     List<LinkedList<Character>> crates;
     List<String> moves;
+
     public Day5(List<LinkedList<Character>> crates, List<String> moves) {
         this.crates = crates;
         this.moves = moves;
@@ -40,8 +42,9 @@ public class Day5 {
             int quantity = Integer.parseInt(operands[1]);
             var from = crates.get(Integer.parseInt(operands[3]) - 1);
             var to = crates.get(Integer.parseInt(operands[5]) - 1);
-            for (int i = quantity-1; i >= 0; i--) {
-                // yes I'm aware LinkedLists have O(N) random access leave me alone
+            for (int i = quantity - 1; i >= 0; i--) {
+                // yes I'm aware LinkedLists have O(N) random access it was better
+                // when I was just taking one off the top
                 to.addFirst(from.remove(i));
             }
 
@@ -55,7 +58,7 @@ public class Day5 {
 
     public static Day5 getDay(String fileName) {
         List<String> moves = new LinkedList<>();
-        List<LinkedList<Character>> containers = new LinkedList<>();
+        List<LinkedList<Character>> containers = new ArrayList<>();
         boolean atStack = true;
         for (String line : Utilities.getContent(fileName)) {
             if (line.length() == 0) {
@@ -71,7 +74,7 @@ public class Day5 {
 
             if (atStack) {
                 for (int c = 0; c < containers.size(); c++) {
-                    char chr = line.charAt(1 + 4*c);
+                    char chr = line.charAt(1 + 4 * c);
                     if (chr != ' ' && !Character.isDigit(chr)) {
                         var container = containers.get(c);
                         container.addLast(chr);

@@ -11,7 +11,7 @@ public class Day6 {
         var day6 = new Day6(Utilities.getContent(args[0]).get(0));
         Utilities.printResult(day6.part1(), day6.part2());
     }
-    
+
     private final List<Character> transmission;
 
     public Day6(String transmission) {
@@ -30,17 +30,15 @@ public class Day6 {
 
     /**
      * Gets the first index of a unique message
+     *
      * @param messageLength length of message
      * @return index of start of message
      * @throws NoSuchElementException if message does not exist in transmission
      */
     public int getStartOfMessage(int messageLength) {
         for (int i = messageLength; i < transmission.size(); i++) {
-            var packet = transmission.subList(i - messageLength, i);
-            if (packet
-                    .stream()
-                    .distinct()
-                    .count() == packet.size())
+            var message = transmission.subList(i - messageLength, i);
+            if (message.stream().distinct().count() == message.size())
                 return i;
         }
         throw new NoSuchElementException("Packet does not exist in transmission!");
