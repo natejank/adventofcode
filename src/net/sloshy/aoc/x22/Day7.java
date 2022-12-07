@@ -11,12 +11,11 @@ public class Day7 {
         Utilities.printResult(day7.part1(), day7.part2());
     }
 
-    private final List<String> input;
     private final File root;
+
     public Day7(List<String> input) {
-        this.input = input;
         root = new File("/");
-        populateFilesystem();
+        populateFilesystem(root, input);
     }
 
     public int part1() {
@@ -27,9 +26,9 @@ public class Day7 {
             if (directory.getSize() <= 100000) {
                 totalSize += directory.getSize();
             }
-            for (String f : directory.children().keySet()) {
-                File file = directory.children().get(f);
-                if (file.size() == -1) {
+            for (String f : directory.getChildren()) {
+                File file = directory.getChild(f);
+                if (file.isDirectory()) {
                     children.add(file);
                 }
             }
@@ -48,9 +47,9 @@ public class Day7 {
                 meetsRequirements.add(directory);
             }
 
-            for (String f : directory.children().keySet()) {
-                File file = directory.children().get(f);
-                if (file.size() == -1) {
+            for (String f : directory.getChildren()) {
+                File file = directory.getChild(f);
+                if (file.isDirectory()) {
                     children.add(file);
                 }
             }
@@ -61,7 +60,7 @@ public class Day7 {
     /**
      * Reads the input; fills in files from the root.
      */
-    public void populateFilesystem() {
+    public static void populateFilesystem(File root, List<String> input) {
         List<String> wd = new ArrayList<>();
         String cmd = "";
         for (String command : input) {
@@ -69,76 +68,114 @@ public class Day7 {
             if (command.startsWith("$")) {
                 cmd = operands[1];
                 if (cmd.equals("cd")) {
-                    wd = modifyWorkingDirectory(wd, operands[2]);
+                    String destination = operands[2];
+                    switch (destination) {
+                        // remove all items without changing structure
+                        case "/" -> wd = wd.subList(0, 0);
+                        default -> wd.add(destination);
+                        case ".." -> {
+                            // we can't go lower than the root
+                            if (wd.size() != 0) {
+                                // lop off the last directory
+                                wd = wd.subList(0, wd.size() - 1);
+                            }
+                        }
+                        case "." -> {}  // don't do anything; destination is wd
+                    }
                 }
             } else {
                 if (cmd.equals("ls")) {
-                    var parent = getPWD(wd);
                     var name = operands[1];
-                    if (operands[0].equals("dir")) {
-                        if (!parent.children().containsKey(name)) {
-                            parent.children().put(name, new File(name));
+                    var size = operands[0];
+
+                    // get the current directory as a file
+                    File parent = root;
+                    for (String dir : wd) {
+                        if (!parent.hasChild(dir)) {
+                            // new directory just dropped 😳
+                            parent.addChild(dir, new File(dir));
+                        }
+                        parent = parent.getChild(dir);
+                    }
+
+                    if (size.equals("dir")) {
+                        // Don't overwrite directories!  It will destroy the internal contents.
+                        if (!parent.hasChild(name)) {
+                            parent.addChild(name, new File(name));
                         }
                     }
                     else {
-                        parent.children().put(operands[1], new File(name, Integer.parseInt(operands[0])));
+                        // overwriting files is safe because they have no children.
+                        parent.addChild(name, new File(name, Integer.parseInt(size)));
                     }
                 }
             }
         }
     }
 
+
     /**
-     * Handles directory semantics for populateFilesystem
-     * @param workingDirectory
-     * @param destination
-     * @return
+     * EVERYTHING IS A FILE
      */
-    public static List<String> modifyWorkingDirectory(List<String> workingDirectory, String destination) {
-        switch (destination) {
-            case "/" -> workingDirectory = workingDirectory.subList(0, 0);
-            default -> workingDirectory.add(destination);
-            case ".." -> {
-                // we can't go lower than the root
-                if (workingDirectory.size() != 0) {
-                    // lop off the last directory
-                    return workingDirectory.subList(0, workingDirectory.size() - 1);
-                }
-            }
-            case "." -> {}  // don't do anything; destination is wd
+    private static class File {
+        String name;
+        int size;
+        Map<String, File> children;
+
+        /**
+         * Private file constructor
+         *
+         * @param name name of file
+         * @param size size of file; -1 for directories
+         * @param children map of children; null for files
+         */
+        private File(String name, int size, Map<String, File> children) {
+            this.name = name;
+            this.size = size;
+            this.children = children;
         }
-        return workingDirectory;
-    }
 
-    /**
-     * Helper function for populateFilesystem; generates files if they dne
-     * @param pwd the list of directories
-     * @return the present directory as a file
-     */
-    public File getPWD(List<String> pwd) {
-        File parent = root;
-
-        for (String dir : pwd) {
-            if (!parent.children().containsKey(dir))
-                // new directory just dropped 😳
-                parent.children().put(dir, new File(dir));
-
-            parent = parent.children().get(dir);
-        }
-        return parent;
-    }
-
-    /**
-     * EVERYTHING IS A FILE MWAHAHAHAHAHA
-     * @param size
-     * @param children
-     */
-    private record File(String name, int size, Map<String, File> children){
+        /**
+         * File constructor
+         *
+         * @param name name of file
+         * @param size size of file
+         */
         File(String name, int size) {
             this(name, size, null);
         }
+
+        /**
+         * Directory constructor
+         *
+         * @param name name of directory
+         */
         File(String name) {
             this(name, -1, new HashMap<>());
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public boolean hasChild(String name) {
+            return children.containsKey(name);
+        }
+
+        public File getChild(String name) {
+            return children.get(name);
+        }
+
+        public Set<String> getChildren() {
+            return children.keySet();
+        }
+
+        public void addChild(String name, File child) {
+            children.put(name, child);
+        }
+
+        public boolean isDirectory() {
+            return size == -1;
         }
 
         public int getSize() {
@@ -148,28 +185,30 @@ public class Day7 {
             }
 
             int size = 0;
-            for (String f : children.keySet()) {
-                File child = children.get(f);
+            for (String f : getChildren()) {
+                File child = getChild(f);
                 size += child.getSize();
             }
             return size;
         }
 
-        public String listContents() {
-            return listContents("");
+        @Override
+        public int hashCode() {
+            return size + name.hashCode() + (children == null ? 0 : children.hashCode());
         }
 
-        private String listContents(String path) {
-            var builder = new StringBuilder(path);
-            for (String key : children.keySet()) {
-                File child = children.get(key);
-                if (child.size == -1) {
-                    child.listContents(path + "/" + key);
-                } else {
-                    builder.append("%s/%s : %d%n".formatted(path, key, child.size));
-                }
+        @Override
+        public boolean equals(Object obj) {
+            boolean result = true;
+            if (obj == this)
+                return true;
+            if (obj instanceof File objFile) {
+                result = this.size == objFile.size;
+                result &= this.name.equals(objFile.name);
+                // null-safe .equals
+                result &= Objects.equals(this.children, objFile.children);
             }
-            return builder.toString();
+            return result;
         }
     }
 }
