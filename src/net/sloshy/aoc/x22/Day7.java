@@ -20,16 +20,16 @@ public class Day7 {
 
     public int part1() {
         int totalSize = 0;
-        List<File> children = new LinkedList<>(List.of(root));
-        while (!children.isEmpty()) {
-            File directory = children.remove(0);
+        List<File> directories = new LinkedList<>(List.of(root));
+        while (!directories.isEmpty()) {
+            File directory = directories.remove(0);
             if (directory.getSize() <= 100000) {
                 totalSize += directory.getSize();
             }
             for (String f : directory.getChildren()) {
                 File file = directory.getChild(f);
                 if (file.isDirectory()) {
-                    children.add(file);
+                    directories.add(file);
                 }
             }
         }
@@ -39,10 +39,10 @@ public class Day7 {
     public int part2() {
         int currentFree = 70000000 - root.getSize();
         List<File> meetsRequirements = new LinkedList<>();
-        List<File> children = new LinkedList<>(List.of(root));
+        List<File> directories = new LinkedList<>(List.of(root));
 
-        while (!children.isEmpty()) {
-            File directory = children.remove(0);
+        while (!directories.isEmpty()) {
+            File directory = directories.remove(0);
             if (currentFree + directory.getSize() >= 30000000) {
                 meetsRequirements.add(directory);
             }
@@ -50,7 +50,7 @@ public class Day7 {
             for (String f : directory.getChildren()) {
                 File file = directory.getChild(f);
                 if (file.isDirectory()) {
-                    children.add(file);
+                    directories.add(file);
                 }
             }
         }
@@ -64,7 +64,7 @@ public class Day7 {
         List<String> wd = new ArrayList<>();
         String cmd = "";
         for (String command : input) {
-            var operands = command.split(" ");
+            String[] operands = command.split(" ");
             if (command.startsWith("$")) {
                 cmd = operands[1];
                 if (cmd.equals("cd")) {
@@ -85,8 +85,8 @@ public class Day7 {
                 }
             } else {
                 if (cmd.equals("ls")) {
-                    var name = operands[1];
-                    var size = operands[0];
+                    String name = operands[1];
+                    String size = operands[0];
 
                     // get the current directory as a file
                     File parent = root;
@@ -141,7 +141,7 @@ public class Day7 {
          * @param name name of file
          * @param size size of file
          */
-        File(String name, int size) {
+        public File(String name, int size) {
             this(name, size, null);
         }
 
@@ -150,7 +150,7 @@ public class Day7 {
          *
          * @param name name of directory
          */
-        File(String name) {
+        public File(String name) {
             this(name, -1, new HashMap<>());
         }
 
