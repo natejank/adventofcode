@@ -11,19 +11,17 @@ public class Day7 {
         Utilities.printResult(day7.part1(), day7.part2());
     }
 
-    private List<String> input;
-    private File root;
+    private final List<String> input;
+    private final File root;
     public Day7(List<String> input) {
         this.input = input;
-        root = new File();
+        root = new File("/");
         populateFilesystem();
     }
 
     public int part1() {
         int totalSize = 0;
-        // not using recursion lol
-        List<File> children = new LinkedList<>();
-        children.add(root);
+        List<File> children = new LinkedList<>(List.of(root));
         while (!children.isEmpty()) {
             File directory = children.remove(0);
             if (directory.getSize() <= 100000) {
@@ -42,14 +40,14 @@ public class Day7 {
     public int part2() {
         int currentFree = 70000000 - root.getSize();
         List<File> meetsRequirements = new LinkedList<>();
-        // not using recursion lol
-        List<File> children = new LinkedList<>();
-        children.add(root);
+        List<File> children = new LinkedList<>(List.of(root));
+
         while (!children.isEmpty()) {
             File directory = children.remove(0);
             if (currentFree + directory.getSize() >= 30000000) {
                 meetsRequirements.add(directory);
             }
+
             for (String f : directory.children().keySet()) {
                 File file = directory.children().get(f);
                 if (file.size() == -1) {
@@ -60,6 +58,9 @@ public class Day7 {
         return meetsRequirements.stream().mapToInt(File::getSize).min().orElseThrow();
     }
 
+    /**
+     * Reads the input; fills in files from the root.
+     */
     public void populateFilesystem() {
         List<String> wd = new ArrayList<>();
         String cmd = "";
@@ -73,20 +74,26 @@ public class Day7 {
             } else {
                 if (cmd.equals("ls")) {
                     var parent = getPWD(wd);
-
+                    var name = operands[1];
                     if (operands[0].equals("dir")) {
-                        if (!parent.children().containsKey(operands[1])) {
-                            parent.children().put(operands[1], new File());
+                        if (!parent.children().containsKey(name)) {
+                            parent.children().put(name, new File(name));
                         }
                     }
                     else {
-                        parent.children().put(operands[1], new File(Integer.parseInt(operands[0])));
+                        parent.children().put(operands[1], new File(name, Integer.parseInt(operands[0])));
                     }
                 }
             }
         }
     }
 
+    /**
+     * Handles directory semantics for populateFilesystem
+     * @param workingDirectory
+     * @param destination
+     * @return
+     */
     public static List<String> modifyWorkingDirectory(List<String> workingDirectory, String destination) {
         switch (destination) {
             case "/" -> workingDirectory = workingDirectory.subList(0, 0);
@@ -103,13 +110,18 @@ public class Day7 {
         return workingDirectory;
     }
 
+    /**
+     * Helper function for populateFilesystem; generates files if they dne
+     * @param pwd the list of directories
+     * @return the present directory as a file
+     */
     public File getPWD(List<String> pwd) {
         File parent = root;
 
         for (String dir : pwd) {
             if (!parent.children().containsKey(dir))
                 // new directory just dropped 😳
-                parent.children().put(dir, new File());
+                parent.children().put(dir, new File(dir));
 
             parent = parent.children().get(dir);
         }
@@ -121,12 +133,12 @@ public class Day7 {
      * @param size
      * @param children
      */
-    private record File(int size, Map<String, File> children){
-        File(int size) {
-            this(size, null);
+    private record File(String name, int size, Map<String, File> children){
+        File(String name, int size) {
+            this(name, size, null);
         }
-        File() {
-            this(-1, new HashMap<>());
+        File(String name) {
+            this(name, -1, new HashMap<>());
         }
 
         public int getSize() {
@@ -143,19 +155,21 @@ public class Day7 {
             return size;
         }
 
-        public void listContents() {
-            listContents("/");
+        public String listContents() {
+            return listContents("");
         }
 
-        private void listContents(String path) {
+        private String listContents(String path) {
+            var builder = new StringBuilder(path);
             for (String key : children.keySet()) {
                 File child = children.get(key);
                 if (child.size == -1) {
                     child.listContents(path + "/" + key);
                 } else {
-                    System.out.printf("%s/%s : %d%n", path, key, child.size);
+                    builder.append("%s/%s : %d%n".formatted(path, key, child.size));
                 }
             }
+            return builder.toString();
         }
     }
 }
