@@ -35,12 +35,12 @@ public class Day1 {
         Collections.sort(elves);
     }
 
-    private int part1() {
+    public int part1() {
         // get the last elf group
         return elves.get(elves.size() - 1);
     }
 
-    private int part2() {
+    public int part2() {
         // get the last 3 groups
         return elves.subList(elves.size() - 3, elves.size())
                 // (safely) put them in an elf-slurry

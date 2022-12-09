@@ -11,8 +11,8 @@ public class Day3 {
         Utilities.printResult(day3.part1(), day3.part2());
     }
 
-    public static final int LOWER_CASE = 97;
-    public static final int UPPER_CASE = 65;
+    private static final int LOWER_CASE = 97;
+    private static final int UPPER_CASE = 65;
 
     private final List<String> input;
 
@@ -52,7 +52,7 @@ public class Day3 {
         return priorities;
     }
 
-    public int getPriority(char item) {
+    private int getPriority(char item) {
         if (item >= UPPER_CASE && item <= UPPER_CASE + 25) {
             return (item - UPPER_CASE) + 27;
         } else if (item >= LOWER_CASE && item <= LOWER_CASE + 25) {

@@ -56,7 +56,7 @@ public class Day5 {
         return output.toString();
     }
 
-    public static Day5 getDay(String fileName) {
+    private static Day5 getDay(String fileName) {
         List<String> moves = new LinkedList<>();
         List<LinkedList<Character>> containers = new ArrayList<>();
         boolean atStack = true;

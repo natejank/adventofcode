@@ -60,7 +60,7 @@ public class Day7 {
     /**
      * Reads the input; fills in files from the root.
      */
-    public static void populateFilesystem(File root, List<String> input) {
+    private static void populateFilesystem(File root, List<String> input) {
         List<String> wd = new ArrayList<>();
         String cmd = "";
         for (String command : input) {

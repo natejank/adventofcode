@@ -69,7 +69,7 @@ public class Day8 {
         return scenicScore;
     }
 
-    public boolean isVisible(int row, int column) {
+    private boolean isVisible(int row, int column) {
         if (isEdge(row, column))
             return true;
 
@@ -81,11 +81,11 @@ public class Day8 {
         return left | right | up | down;
     }
 
-    public boolean isEdge(int row, int column) {
+    private boolean isEdge(int row, int column) {
         return (row == 0 || row == ROWS || column == 0 || column == COLUMNS);
     }
 
-    public boolean isShortest(int row, int column, Direction direction) {
+    private boolean isShortest(int row, int column, Direction direction) {
         int value = map.get(row).get(column);
         int dimension = direction.horizontal ? column : row;
 
@@ -100,7 +100,7 @@ public class Day8 {
         return true;
     }
 
-    public int scenicScore(int row, int column, Direction direction) {
+    private int scenicScore(int row, int column, Direction direction) {
         int score = 0;
         int dimension = direction.horizontal ? column : row;
         int value = map.get(row).get(column);
@@ -123,13 +123,14 @@ public class Day8 {
 
     }
 
-    public boolean inBounds(int position, Direction direction) {
+    private boolean inBounds(int position, Direction direction) {
         if (direction.endFacing) {
             return position < (direction.horizontal ? COLUMNS - 1 : ROWS - 1);
         } else {
             return position > 0;
         }
     }
+
     private static int[] getCoord(int row, int column) {
         // the int constructor is just really annoying to type :)
         return new int[]{row, column};

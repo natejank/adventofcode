@@ -19,7 +19,7 @@ public class Day2 {
         Utilities.printResult(day2.part1(), day2.part2());
     }
 
-    public enum Result {
+    private enum Result {
         WIN(6),
         LOSS(0),
         TIE(3),
@@ -37,7 +37,7 @@ public class Day2 {
     }
 
     // the moves you can make in RPS
-    public enum Move {
+    private enum Move {
         ROCK(1),
         PAPER(2),
         SCISSORS(3),
@@ -92,7 +92,7 @@ public class Day2 {
      * @param theirs your opponents move
      * @return the match result
      */
-    public static Result getMatchResult(Move yours, Move theirs) {
+    private static Result getMatchResult(Move yours, Move theirs) {
         if (yours == theirs)
             return Result.TIE;
         else if (yours == getResultPairing(theirs).get(Result.WIN))
@@ -107,7 +107,7 @@ public class Day2 {
      * @param move the opponent's move
      * @return results mapped to their required moves
      */
-    public static Map<Result, Move> getResultPairing(Move move) {
+    private static Map<Result, Move> getResultPairing(Move move) {
         return switch (move) {
             case ROCK -> Map.of(
                     Result.WIN, Move.PAPER,
@@ -133,7 +133,7 @@ public class Day2 {
      * @param move the encoded move value
      * @return the pertaining move
      */
-    public static Move decryptMove(char move) {
+    private static Move decryptMove(char move) {
         return switch (move) {
             case 'A', 'X' -> Move.ROCK;
             case 'B', 'Y' -> Move.PAPER;
@@ -148,7 +148,7 @@ public class Day2 {
      * @param result the encoded result
      * @return the decoded result
      */
-    public static Result decryptResult(char result) {
+    private static Result decryptResult(char result) {
         return switch (result) {
             case 'X' -> Result.LOSS;
             case 'Y' -> Result.TIE;

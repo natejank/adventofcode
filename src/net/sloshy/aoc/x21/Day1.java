@@ -23,14 +23,14 @@ public class Day1 {
         System.out.printf("Part 2: %d%n", part2count);
     }
 
-    static int sum(List<Integer> list) {
+    private static int sum(List<Integer> list) {
         int sum = 0;
         for (int n : list)
             sum += n;
         return sum;
     }
 
-    static int slidingWindowSum(List<Integer> values, int windowSize) {
+    private static int slidingWindowSum(List<Integer> values, int windowSize) {
         int count = 0;
         for (int i = 0; i < values.size() - windowSize; i++) {
             int last = sum(values.subList(i, i + windowSize));

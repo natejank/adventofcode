@@ -35,7 +35,7 @@ public class Day6 {
      * @return index of start of message
      * @throws NoSuchElementException if message does not exist in transmission
      */
-    public int getStartOfMessage(int messageLength) {
+    private int getStartOfMessage(int messageLength) {
         for (int i = messageLength; i < transmission.size(); i++) {
             var message = transmission.subList(i - messageLength, i);
             if (message.stream().distinct().count() == message.size())

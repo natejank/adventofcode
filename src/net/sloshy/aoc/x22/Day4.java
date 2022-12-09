@@ -26,7 +26,7 @@ public class Day4 {
         Utilities.printResult(day4.part1(), day4.part2());
     }
 
-    List<int[][]> input;
+    private final List<int[][]> input;
 
     public Day4(List<int[][]> input) {
         this.input = input;
