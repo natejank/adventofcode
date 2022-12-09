@@ -2,6 +2,7 @@ package net.sloshy.aoc.x22;
 
 import net.sloshy.aoc.common.Utilities;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +23,7 @@ public class Day9 {
             })
         );
 
-        Utilities.printResult(day9.part1(), 0);
+        Utilities.printResult(day9.part1(), day9.part2());
     }
 
     private enum Direction {
@@ -46,8 +47,30 @@ public class Day9 {
         for (Movement move : sequence) {
             for (int m = move.magnitude(); m > 0; m--) {
                 head = moveHead(head, move.direction());
-                tail = updateTail(head, tail, move.direction());
+                tail = updateTail(head, tail);
                 tailLocations.add(tail);
+            }
+        }
+        return tailLocations.size();
+    }
+
+    public int part2() {
+        Set<Coordinate> tailLocations = new HashSet<>();
+        List<Coordinate> rope = new ArrayList<>(10);
+        for (int i = 0; i < 10; i++)
+            rope.add(new Coordinate(0, 0));
+
+        for (Movement move : sequence) {
+            for (int m = move.magnitude(); m > 0; m--) {
+                Coordinate head = moveHead(rope.get(0), move.direction());
+                rope.set(0, head);
+                for (int r = 1; r < rope.size(); r++) {
+                    Coordinate tail = rope.get(r);
+                    tail = updateTail(head, tail);
+                    rope.set(r, tail);
+                    head = tail;
+                }
+                tailLocations.add(rope.get(rope.size() - 1));
             }
         }
         return tailLocations.size();
@@ -63,19 +86,22 @@ public class Day9 {
         return head;
     }
 
-    public Coordinate updateTail(Coordinate head, Coordinate tail, Direction headMovement) {
-        int rowDelta = Math.abs(head.row() - tail.row());
-        int columnDelta = Math.abs(head.column() - tail.column());
+    public Coordinate updateTail(Coordinate head, Coordinate tail) {
+        int rowDelta = head.row() - tail.row();
+        int rowDeltaDirection = Integer.signum(rowDelta);
+        int columnDelta = head.column() - tail.column();
+        int columnDeltaDirection = Integer.signum(columnDelta);
 
-        if (rowDelta <= 1 && columnDelta <= 1)
+        if (Math.abs(rowDelta) <= 1 && Math.abs(columnDelta) <= 1)
             return tail;
 
-        return switch (headMovement) {
-            case UP -> new Coordinate(tail.row() + 1, head.column());
-            case DOWN -> new Coordinate(tail.row() - 1, head.column());
-            case RIGHT -> new Coordinate(head.row(), tail.column() + 1);
-            case LEFT -> new Coordinate(head.row(), tail.column() - 1);
-        };
+        if (Math.abs(rowDelta) == 2 && columnDelta == 0)
+            return new Coordinate(tail.row() + rowDeltaDirection, tail.column());
+
+        if (Math.abs(columnDelta) == 2 && rowDelta == 0)
+            return new Coordinate(tail.row(), tail.column() + columnDeltaDirection);
+
+        return new Coordinate(tail.row() + rowDeltaDirection, tail.column() + columnDeltaDirection);
     }
 
     public record Coordinate(int row, int column) {
