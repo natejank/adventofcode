@@ -20,10 +20,17 @@ public class Day8 {
     }
 
     private enum Direction {
-        LEFT,
-        RIGHT,
-        UP,
-        DOWN
+        LEFT(true, false),
+        RIGHT(true, true),
+        UP(false, false),
+        DOWN(false, true),
+        ;
+        public final boolean horizontal;
+        public final boolean endFacing;
+        Direction(boolean horizontal, boolean endFacing) {
+            this.horizontal = horizontal;
+            this.endFacing = endFacing;
+        }
     }
 
     private final List<List<Integer>> map;
@@ -40,8 +47,6 @@ public class Day8 {
         int visible = 0;
         for (int row = 0; row < map.size(); row++) {
             for (int column = 0; column < map.get(row).size(); column++) {
-                if (row == 2 && column == 2)
-                    row = row;
                 if (isVisible(row, column))
                     visible++;
             }
@@ -50,7 +55,18 @@ public class Day8 {
     }
 
     public int part2() {
-        return 0;
+        int scenicScore = 0;
+        for (int row = 0; row < map.size(); row++) {
+            for (int column = 0; column < map.get(row).size(); column++) {
+                int up = scenicScore(row, column, Direction.UP);
+                int down = scenicScore(row, column, Direction.DOWN);
+                int left = scenicScore(row, column, Direction.LEFT);
+                int right = scenicScore(row, column, Direction.RIGHT);
+
+                scenicScore = Math.max(scenicScore, up * down * left * right);
+            }
+        }
+        return scenicScore;
     }
 
     public boolean isVisible(int row, int column) {
@@ -69,39 +85,51 @@ public class Day8 {
         return (row == 0 || row == ROWS || column == 0 || column == COLUMNS);
     }
 
-    public List<int[]> getNeighbors(int row, int column) {
-        List<int[]> neighbors = new LinkedList<>();
-        if (row != 0)
-            neighbors.add(getCoord(row - 1, column));
-        if (row != ROWS)
-            neighbors.add(getCoord(row + 1, column));
-        if (column != 0)
-            neighbors.add(getCoord(row, column - 1));
-        if (column != COLUMNS)
-            neighbors.add(getCoord(row, column + 1));
-        return neighbors;
-    }
-
     public boolean isShortest(int row, int column, Direction direction) {
         int value = map.get(row).get(column);
-        boolean horizontal = direction == Direction.LEFT || direction == Direction.RIGHT;
-        boolean toEnd = direction == Direction.DOWN || direction == Direction.RIGHT;
-        int dimension = horizontal ? column : row;
+        int dimension = direction.horizontal ? column : row;
 
         // welcome to lambda hell bby ;)
-        Function<Integer, Boolean> bounds = toEnd ?
-                (Integer i) -> i < (horizontal ? COLUMNS - 1 : ROWS - 1) :
-                (Integer i) -> i > 0;
-        Function<Integer, Integer> cell = (Integer i) -> horizontal ? map.get(row).get(i) : map.get(i).get(column);
+        Function<Integer, Integer> cell = (Integer i) -> direction.horizontal ? map.get(row).get(i) : map.get(i).get(column);
 
-        for (int i = dimension; bounds.apply(i);) {
-            if (cell.apply((toEnd ? ++i : --i)) >= value) {
+        for (int i = dimension; inBounds(i, direction);) {
+            if (cell.apply((direction.endFacing ? ++i : --i)) >= value) {
                 return false;
             }
         }
         return true;
     }
 
+    public int scenicScore(int row, int column, Direction direction) {
+        int score = 0;
+        int dimension = direction.horizontal ? column : row;
+        int value = map.get(row).get(column);
+
+        if (isEdge(row, column))
+            return 0;
+
+        // welcome to lambda hell bby ;)
+        Function<Integer, Integer> cell = (Integer i) -> direction.horizontal ? map.get(row).get(i) : map.get(i).get(column);
+
+        // while in bounds
+        for (int i = dimension; inBounds(i, direction);) {
+            score++;
+            if (cell.apply((direction.endFacing ? ++i : --i)) >= value) {
+                // if the tree we just counted is taller, stop!
+                break;
+            }
+        }
+        return score;
+
+    }
+
+    public boolean inBounds(int position, Direction direction) {
+        if (direction.endFacing) {
+            return position < (direction.horizontal ? COLUMNS - 1 : ROWS - 1);
+        } else {
+            return position > 0;
+        }
+    }
     private static int[] getCoord(int row, int column) {
         // the int constructor is just really annoying to type :)
         return new int[]{row, column};
