@@ -10,9 +10,10 @@ import net.sloshy.aoc.x22.Day10CPU.CPUObserver;
 public class Day10 {
     public static void main(String[] args) {
         var day10 = new Day10(Utilities.getContent(args[0], (String s) -> s.split(" ")));
-        Utilities.printPart(day10.part1(), 1);
         System.out.println("Part 2:");
-        day10.part2();
+        int part1 = day10.execute();
+        System.out.println();
+        System.out.println("Part 1: " + part1);
     }
 
     private final List<String[]> instructions;
@@ -21,26 +22,17 @@ public class Day10 {
         this.instructions = instructions;
     }
 
-    public int part1() {
-        CPU cpu = new CPU();
-        Part1Observer observer = new Part1Observer();
-        cpu.attachObserver(observer);
-        for (String[] instruction : instructions) {
-            cpu.execute(instruction);
-        }
-        return observer.getSolution();
-    }
-
-    public void part2() {
+    public int execute() {
         CPU cpu = new CPU();
         CRT crt = new CRT();
         cpu.attachObserver(crt);
         for (String[] instruction : instructions) {
             cpu.execute(instruction);
         }
+        return crt.getPart1();
     }
 
-    private static class Part1Observer implements CPUObserver {
+    private static class CRT implements CPUObserver {
         private final List<Integer> signalStrength = new LinkedList<>();
 
         @Override
@@ -48,16 +40,7 @@ public class Day10 {
             if ((cycle - 20) % 40 == 0) {
                 signalStrength.add(cycle * caller.getRegister());
             }
-        }
 
-        public int getSolution() {
-            return signalStrength.stream().mapToInt(Integer::intValue).sum();
-        }
-    }
-
-    private static class CRT implements CPUObserver {
-        @Override
-        public void onCycle(CPU caller, int cycle) {
             int cursor = (cycle - 1) % 40;
             int sprite = caller.getRegister();
             boolean visible = Math.abs(sprite - cursor) <= 1;
@@ -66,6 +49,10 @@ public class Day10 {
             }
             // emoji makes the output actually legible 💀
             System.out.print(visible ? "🎄": "  ");
+        }
+
+        public int getPart1() {
+            return signalStrength.stream().mapToInt(Integer::intValue).sum();
         }
     }
 }
