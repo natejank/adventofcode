@@ -2,11 +2,14 @@
 
 This is my monorepo for my advent of code solutions!
 
-I'm using the Intellij build system for running the programs, which is a
-bit weird, but it's easy.  It's not a serious enough project to get my hands
-dirty with gradle.  Most puzzles have run configurations to
-execute both the input and the example input.
+To run any given configuration, use `./build` with a year and day!
+Just make sure you have python and a semi-recent version of java installed :)
 
-I'll probably come up with a better solution later
+`./build run 2022 10` or `./build run 2022 10 --test`
+
+Inputs are not provided (per [the creator](https://mobile.twitter.com/ericwastl/status/1465805354214830081)'s wishes),
+but they can be added with either `./build create 2022 10` or
+by adding the content to `lib/{year}/day{day}.input.txt`
+
 
 I can't guarantee that my solutions are very good.
