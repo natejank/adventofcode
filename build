@@ -31,16 +31,20 @@ def get_input_path(year: str, day: str, test: bool) -> Path:
     return Path('lib', f'20{year}', f'day{day}{"_test" if test else ""}.input.txt')
 
 
+def get_class(year: str, day: str):
+    return PACKAGE.joinpath(f'x{year}').joinpath(f'Day{day}')
+
+
 def run_day(year: str, day: str, input_file: str):
-    path = PACKAGE.joinpath(f'x{year}').joinpath(f'Day{day}')
+    path = get_class(year, day)
     subprocess.run(['java', '-classpath', BUILD_DIR, str(path), input_file])
 
 
 def main():
     argument_parser = argparse.ArgumentParser(description='An advent of code build system')
-    argument_parser.add_argument('directive', help='Run directive.  Possible options are [run]')
-    argument_parser.add_argument('day', help='Day to run')
+    argument_parser.add_argument('directive', help='Run directive.  Possible options are [run, create]')
     argument_parser.add_argument('year', help='Year to run. Valid formats are 4 digit (2022) or 2 digit (22)')
+    argument_parser.add_argument('day', help='Day to run')
     argument_parser.add_argument('--test', '-t', dest='test', action='store_true', help='Use the test input?')
     argument_parser.add_argument('--input', '-i', dest='input_file', help='Custom input file')
     # TODO:
@@ -65,6 +69,10 @@ def main():
         case 'run':
             compile_java(*find_java_files())
             run_day(year, day, input_file)
+        case 'create':
+            get_input_path(year, day, False).touch()
+            get_input_path(year, day, True).touch()
+            Path('src').joinpath(get_class(year, day)).with_suffix('.java').touch()
         case _:
             print('Invalid directive!')
             sys.exit(1)
