@@ -6,16 +6,16 @@ import java.util.List;
 public class CPU {
     private int register;
     private int cycles;
-    private final List<CPUDebugger> debuggers;
+    private final List<CPUObserver> observers;
 
     public CPU() {
         register = 1;
         cycles = 0;
-        debuggers = new LinkedList<>();
+        observers = new LinkedList<>();
     }
 
-    public void attachDebugger(CPUDebugger debugger) {
-        debuggers.add(debugger);
+    public void attachObserver(CPUObserver observer) {
+        observers.add(observer);
     }
 
     public int getRegister() {
@@ -24,8 +24,8 @@ public class CPU {
 
     private void cycle() {
         cycles++;
-        for (var debugger : debuggers)
-            debugger.onCycle(this, cycles);
+        for (var observer : observers)
+            observer.onCycle(this, cycles);
     }
 
     private void incrementRegister(int value) {

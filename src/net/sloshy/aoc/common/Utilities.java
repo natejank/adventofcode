@@ -46,6 +46,16 @@ public class Utilities {
     }
 
     /**
+     * Displays the result of one part of the challenge
+     * @param value the result of the challenge
+     * @param part integer representing the challenge number
+     * @param <P> result type
+     */
+    public static <P> void printPart(P value, int part) {
+        System.out.printf("Part %d: %s%n", part, value);
+    }
+
+    /**
      * Displays the results of each challenge part
      * @param part1 the result of part 1
      * @param part2 the result of part 2
@@ -53,7 +63,7 @@ public class Utilities {
      * @param <P2> part 2 result type
      */
     public static <P1, P2> void printResult(P1 part1, P2 part2) {
-        System.out.printf("Part 1: %s%n", part1);
-        System.out.printf("Part 2: %s%n", part2);
+        printPart(part1, 1);
+        printPart(part2, 2);
     }
 }
