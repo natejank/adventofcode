@@ -2,6 +2,8 @@ package net.sloshy.aoc.x22;
 
 import net.sloshy.aoc.common.Coordinate;
 import net.sloshy.aoc.common.Utilities;
+import net.sloshy.aoc.common.search.SearchState;
+import net.sloshy.aoc.common.search.bfs.Solver;
 
 import java.util.*;
 
@@ -14,9 +16,9 @@ public class Day12 {
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[y].length; x++) {
                 map[y][x] = input.get(y)[x];
-                if (map[y][x] == Position.STARTING_CHAR)
+                if (map[y][x] == Part1State.STARTING_CHAR)
                     start = new Coordinate(x, y);
-                else if (map[y][x] == Position.GOAL_CHAR)
+                else if (map[y][x] == Part1State.GOAL_CHAR)
                     goal = new Coordinate(x, y);
             }
         }
@@ -38,7 +40,7 @@ public class Day12 {
 
     public int part1() {
         Solver solver = new Solver();
-        List<Position> solution = solver.solve(new Position(map, start));
+        List<SearchState> solution = solver.solve(new Part1State(map, start));
         if (solution != null)
             // don't include the final step in the count
             return solution.size() - 1;
@@ -48,7 +50,7 @@ public class Day12 {
 
     public int part2() {
         Solver solver = new Solver();
-        List<Position> solution = solver.solve(new PositionPart2(map, goal));
+        List<SearchState> solution = solver.solve(new Part2State(map, goal));
         if (solution != null)
             // don't include the final step in the count
             return solution.size() - 1;
@@ -56,67 +58,16 @@ public class Day12 {
             throw new RuntimeException("No solution!");
     }
 
-    private static class Solver {
-        private final Map<Position, Position> adjacencyMap;
 
-        public Solver() {
-            adjacencyMap = new HashMap<>();
-        }
+    private static class Part2State extends Part1State {
 
-        public List<Position> solve(Position initial) {
-            Queue<Position> queue = new LinkedList<>();
-            Position current;
-
-            queue.add(initial);
-            adjacencyMap.put(initial, null);
-
-            while (!queue.isEmpty()) {
-                current = queue.remove();
-                if (current.isGoal()) {
-                    return resolveParentChain(current);
-                } else {
-                    List<Position> neighbors = current.getChildren();
-                    for (Position neighbor : neighbors) {
-                        // if we haven't seen this one already
-                        if (!adjacencyMap.containsKey(neighbor)) {
-                            queue.add(neighbor);
-                            adjacencyMap.put(neighbor, current);
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-
-        /**
-         * Create a linked list of configurations to go from start to child
-         *
-         * @param end the end of the chain to be resolved
-         * @return The chain of succession to get the end configuration
-         */
-        private List<Position> resolveParentChain(Position end) {
-            List<Position> chain = new LinkedList<>();
-            Position next = end;
-            while (next != null) {  // the first item has a parent of null
-                chain.add(0, next);
-                next = adjacencyMap.get(next);  // get the parent
-            }
-            return chain;
-        }
-    }
-
-
-    private static class PositionPart2 extends Position {
-
-        public static char STARTING_CHAR = 'E';
         public static char GOAL_CHAR = 'a';
 
-        public PositionPart2(char[][] map, Coordinate start) {
+        public Part2State(char[][] map, Coordinate start) {
             super(map, start);
         }
 
-        protected PositionPart2(Position parent, Coordinate position) {
+        protected Part2State(Part1State parent, Coordinate position) {
             super(parent, position);
         }
 
@@ -124,30 +75,30 @@ public class Day12 {
          * @return all valid children
          */
         @Override
-        public List<Position> getChildren() {
-            List<Position> children = new LinkedList<>();
+        public List<SearchState> getChildren() {
+            List<SearchState> children = new LinkedList<>();
 
             // we can move 1 position in any direction
-            children.add(new PositionPart2(
+            children.add(new Part2State(
                     this,
                     new Coordinate(getPosition().x() + 1, getPosition().y())
             ));
-            children.add(new PositionPart2(
+            children.add(new Part2State(
                     this,
                     new Coordinate(getPosition().x() - 1, getPosition().y())
             ));
-            children.add(new PositionPart2(
+            children.add(new Part2State(
                     this,
                     new Coordinate(getPosition().x(), getPosition().y() + 1)
             ));
-            children.add(new PositionPart2(
+            children.add(new Part2State(
                     this,
                     new Coordinate(getPosition().x(), getPosition().y() - 1)
             ));
 
             // validation and pruning
             for (int i = 0; i < children.size(); ) {
-                Position child = children.get(i);
+                Part1State child = (Part1State) children.get(i);
                 // we can't go out of bounds!
                 if (!child.getPosition().inBounds(X_BOUND, Y_BOUND))
                     children.remove(i);
@@ -167,7 +118,7 @@ public class Day12 {
     }
 
 
-    private static class Position {
+    private static class Part1State implements SearchState {
         private final char[][] map;
         private final Coordinate position;
         protected final int X_BOUND;
@@ -181,7 +132,7 @@ public class Day12 {
          *
          * @param map the map
          */
-        public Position(char[][] map, Coordinate start) {
+        public Part1State(char[][] map, Coordinate start) {
             this.map = map;
             this.X_BOUND = map[0].length;
             this.Y_BOUND = map.length;
@@ -195,7 +146,7 @@ public class Day12 {
          * @param parent   the parent position
          * @param position the new coordinate
          */
-        protected Position(Position parent, Coordinate position) {
+        protected Part1State(Part1State parent, Coordinate position) {
             this.map = parent.map;
             this.X_BOUND = parent.X_BOUND;
             this.Y_BOUND = parent.Y_BOUND;
@@ -207,30 +158,30 @@ public class Day12 {
          *
          * @return
          */
-        public List<Position> getChildren() {
-            List<Position> children = new LinkedList<>();
+        public List<SearchState> getChildren() {
+            List<SearchState> children = new LinkedList<>();
 
             // we can move 1 position in any direction
-            children.add(new Position(
+            children.add(new Part1State(
                     this,
                     new Coordinate(position.x() + 1, position.y())
             ));
-            children.add(new Position(
+            children.add(new Part1State(
                     this,
                     new Coordinate(position.x() - 1, position.y())
             ));
-            children.add(new Position(
+            children.add(new Part1State(
                     this,
                     new Coordinate(position.x(), position.y() + 1)
             ));
-            children.add(new Position(
+            children.add(new Part1State(
                     this,
                     new Coordinate(position.x(), position.y() - 1)
             ));
 
             // validation and pruning
             for (int i = 0; i < children.size(); ) {
-                Position child = children.get(i);
+                Part1State child = (Part1State) children.get(i);
                 // we can't go out of bounds!
                 if (!child.getPosition().inBounds(X_BOUND, Y_BOUND))
                     children.remove(i);
@@ -302,7 +253,7 @@ public class Day12 {
             boolean result;
             if (this == other)
                 return true;
-            if (other instanceof Position otherPosition) {
+            if (other instanceof Part1State otherPosition) {
                 result = position.equals(otherPosition.position);
                 // compare map
                 if (map.length == otherPosition.map.length) {
