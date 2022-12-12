@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Generic search state interface.  Most searches are similar enough
  * that this works for bfs/dfs/etc.
- * <p/>
+ * <br>
  * Each state is intended to be immutable, so the solution becomes
  * a chain of states from start to finish.
  */
