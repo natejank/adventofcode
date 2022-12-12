@@ -10,29 +10,45 @@ public class Day12 {
         List<char[]> input = Utilities.getContent(args[0], String::toCharArray);
         char[][] map = new char[input.size()][input.get(0).length];
         Coordinate start = null;
+        Coordinate goal = null;
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[y].length; x++) {
                 map[y][x] = input.get(y)[x];
                 if (map[y][x] == Position.STARTING_CHAR)
                     start = new Coordinate(x, y);
+                else if (map[y][x] == Position.GOAL_CHAR)
+                    goal = new Coordinate(x, y);
             }
         }
-        
-        var day12 = new Day12(map, start);
 
-        Utilities.printResult(day12.part1(), 0);
+        var day12 = new Day12(map, start, goal);
+
+        Utilities.printResult(day12.part1(), day12.part2());
     }
 
     private Coordinate start;
+    private Coordinate goal;
     private char[][] map;
-    public Day12(char[][] map, Coordinate start) {
+
+    public Day12(char[][] map, Coordinate start, Coordinate goal) {
         this.map = map;
         this.start = start;
+        this.goal = goal;
     }
 
     public int part1() {
         Solver solver = new Solver();
         List<Position> solution = solver.solve(new Position(map, start));
+        if (solution != null)
+            // don't include the final step in the count
+            return solution.size() - 1;
+        else
+            throw new RuntimeException("No solution!");
+    }
+
+    public int part2() {
+        Solver solver = new Solver();
+        List<Position> solution = solver.solve(new PositionPart2(map, goal));
         if (solution != null)
             // don't include the final step in the count
             return solution.size() - 1;
@@ -54,7 +70,7 @@ public class Day12 {
             queue.add(initial);
             adjacencyMap.put(initial, null);
 
-            while(!queue.isEmpty()) {
+            while (!queue.isEmpty()) {
                 current = queue.remove();
                 if (current.isGoal()) {
                     return resolveParentChain(current);
@@ -90,17 +106,79 @@ public class Day12 {
         }
     }
 
+
+    private static class PositionPart2 extends Position {
+
+        public static char STARTING_CHAR = 'E';
+        public static char GOAL_CHAR = 'a';
+
+        public PositionPart2(char[][] map, Coordinate start) {
+            super(map, start);
+        }
+
+        protected PositionPart2(Position parent, Coordinate position) {
+            super(parent, position);
+        }
+
+        /**
+         * @return all valid children
+         */
+        @Override
+        public List<Position> getChildren() {
+            List<Position> children = new LinkedList<>();
+
+            // we can move 1 position in any direction
+            children.add(new PositionPart2(
+                    this,
+                    new Coordinate(getPosition().x() + 1, getPosition().y())
+            ));
+            children.add(new PositionPart2(
+                    this,
+                    new Coordinate(getPosition().x() - 1, getPosition().y())
+            ));
+            children.add(new PositionPart2(
+                    this,
+                    new Coordinate(getPosition().x(), getPosition().y() + 1)
+            ));
+            children.add(new PositionPart2(
+                    this,
+                    new Coordinate(getPosition().x(), getPosition().y() - 1)
+            ));
+
+            // validation and pruning
+            for (int i = 0; i < children.size(); ) {
+                Position child = children.get(i);
+                // we can't go out of bounds!
+                if (!child.getPosition().inBounds(X_BOUND, Y_BOUND))
+                    children.remove(i);
+                    // we can't go down more than 1 position (we're going backwards)
+                else if (getCurrentHeight() - child.getCurrentHeight() > 1)
+                    children.remove(i);
+                else
+                    i++;
+            }
+            return children;
+        }
+
+        @Override
+        public boolean isGoal() {
+            return getCurrentPosition() == GOAL_CHAR;
+        }
+    }
+
+
     private static class Position {
         private final char[][] map;
         private final Coordinate position;
-        private final int X_BOUND;
-        private final int Y_BOUND;
+        protected final int X_BOUND;
+        protected final int Y_BOUND;
 
         public static final char STARTING_CHAR = 'S';
         public static final char GOAL_CHAR = 'E';
 
         /**
          * Initial constructor; sets coordinate to 0
+         *
          * @param map the map
          */
         public Position(char[][] map, Coordinate start) {
@@ -113,10 +191,11 @@ public class Day12 {
 
         /**
          * Child copy constructor
-         * @param parent the parent position
+         *
+         * @param parent   the parent position
          * @param position the new coordinate
          */
-        private Position(Position parent, Coordinate position) {
+        protected Position(Position parent, Coordinate position) {
             this.map = parent.map;
             this.X_BOUND = parent.X_BOUND;
             this.Y_BOUND = parent.Y_BOUND;
@@ -125,6 +204,7 @@ public class Day12 {
 
         /**
          * Gets all valid children
+         *
          * @return
          */
         public List<Position> getChildren() {
@@ -149,12 +229,12 @@ public class Day12 {
             ));
 
             // validation and pruning
-            for (int i = 0; i < children.size();) {
+            for (int i = 0; i < children.size(); ) {
                 Position child = children.get(i);
                 // we can't go out of bounds!
                 if (!child.getPosition().inBounds(X_BOUND, Y_BOUND))
                     children.remove(i);
-                // we can't go up more than 1 position
+                    // we can't go up more than 1 position
                 else if (child.getCurrentHeight() - getCurrentHeight() > 1)
                     children.remove(i);
                 else
@@ -166,14 +246,14 @@ public class Day12 {
         /**
          * @return the current position as a char
          */
-        private char getCurrentPosition() {
+        protected char getCurrentPosition() {
             return getTile(position);
         }
 
         /**
          * @return height of the current position
          */
-        private int getCurrentHeight() {
+        protected int getCurrentHeight() {
             return getHeight(position);
         }
 
@@ -194,19 +274,21 @@ public class Day12 {
         /**
          * Gets an arbitrary tile on the board
          * (I mostly made this so I wouldn't mix up x and y lol)
+         *
          * @param coordinate coordinate to get
          * @return char at that coordinate
          */
-        private char getTile(Coordinate coordinate) {
+        protected char getTile(Coordinate coordinate) {
             return map[coordinate.y()][coordinate.x()];
         }
 
         /**
          * Gets coordinate as an integer
+         *
          * @param coordinate coordinate to get
          * @return height of the coordinate from 0-25
          */
-        private int getHeight(Coordinate coordinate) {
+        protected int getHeight(Coordinate coordinate) {
             char val = getTile(coordinate);
             if (val == STARTING_CHAR)
                 val = 'a';
