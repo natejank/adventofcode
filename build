@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import os
 import sys
 import subprocess
 from pathlib import Path
 
 BUILD_DIR = 'out'
 COMPILE_FLAGS = ('-d', BUILD_DIR)
-PACKAGE = Path('net', 'sloshy', 'aoc')
-
+PACKAGE = 'net.sloshy.aoc'
 
 def find_java_files(source_root=Path('src')):
     paths = [source_root]
@@ -32,12 +32,31 @@ def get_input_path(year: str, day: str, test: bool) -> Path:
 
 
 def get_class(year: str, day: str):
-    return PACKAGE.joinpath(f'x{year}').joinpath(f'Day{day}')
+    return Path(*PACKAGE.split('.')).joinpath(f'x{year}').joinpath(f'Day{day}')
 
 
 def run_day(year: str, day: str, input_file: str):
     path = get_class(year, day)
     subprocess.run(['java', '-classpath', BUILD_DIR, str(path), input_file])
+
+
+def java_template(year: str, day: str, input_file: str):
+    template = (
+        f'package {PACKAGE}.x{year};\n',
+        '\n',
+        'import java.util.*;\n',
+        '\n',
+        f'import {PACKAGE}.common.Utilities;\n',
+        '\n',
+        f'public class Day{day} {{\n',
+        '    public static void main(String[] args) {\n'
+        '        \n'
+        '    }\n'
+        '}\n'
+    )
+
+    with open(input_file, 'w') as handle:
+        handle.writelines(template)
 
 
 def main():
@@ -72,7 +91,7 @@ def main():
         case 'create':
             get_input_path(year, day, False).touch()
             get_input_path(year, day, True).touch()
-            Path('src').joinpath(get_class(year, day)).with_suffix('.java').touch()
+            java_template(year, day, str(Path('src').joinpath(get_class(year, day)).with_suffix('.java')))
         case _:
             print('Invalid directive!')
             sys.exit(1)
