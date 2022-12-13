@@ -1,15 +1,26 @@
 #!/usr/bin/env python3
+# TODO:
+# clean (no args) to rm -r out/*
+# compile (no args) to recursively compile the whole project
 import argparse
-import os
 import sys
 import subprocess
 from pathlib import Path
 
 BUILD_DIR = 'out'
 COMPILE_FLAGS = ('-d', BUILD_DIR)
+RUN_FLAGS = ('-classpath', BUILD_DIR)
 PACKAGE = 'net.sloshy.aoc'
 
-def find_java_files(source_root=Path('src')):
+
+def find_java_files(source_root=Path('src')) -> list[Path]:
+    """
+    Recursively crawls filesystem from a root to find java source files.
+    By default, this starts at ./src
+
+    :param source_root: the root to crawl from
+    :return: list of paths to java files, with source_root as the start of the path
+    """
     paths = [source_root]
     files = []
     while len(paths) > 0:
@@ -19,28 +30,67 @@ def find_java_files(source_root=Path('src')):
                 paths.append(path)
         for file in directory.glob('*.java'):
             if file not in files:
-                files.append(str(file))
+                files.append(file)
     return files
 
 
-def compile_java(*files: str):
-    subprocess.run(['javac', *COMPILE_FLAGS, *files])
+def compile_java(*files: Path) -> None:
+    """
+    Compiles java files given as arguments
+
+    :param files: string paths to compile
+    """
+    # convert path to string before compilation
+    to_compile = [str(f) for f in files]
+    subprocess.run(['javac', *COMPILE_FLAGS, *to_compile])
 
 
 def get_input_path(year: str, day: str, test: bool) -> Path:
+    """
+    Gets the path to the input file.  Input files are stored in
+    lib/{year}/day{day}.input.txt, so this method returns a path to the input
+    in that form.
+
+    :param year: 2-digit year
+    :param day: day to get
+    :param test: whether to get the test input
+    :return: path to a given day's input
+    """
     return Path('lib', f'20{year}', f'day{day}{"_test" if test else ""}.input.txt')
 
 
-def get_class(year: str, day: str):
+def get_class(year: str, day: str) -> Path:
+    """
+    Gets a filesystem path to a java class.  This is useful for accessing
+    compiled class files in the output directory
+
+    :param year: year of class
+    :param day: day of class
+    :return: Path to class file
+    """
     return Path(*PACKAGE.split('.')).joinpath(f'x{year}').joinpath(f'Day{day}')
 
 
-def run_day(year: str, day: str, input_file: str):
+def run_day(year: str, day: str, input_file) -> None:
+    """
+    Runs the class for a given year and day
+
+    :param year: year to run
+    :param day: day to run
+    :param input_file: The input file to provide; Path or str
+    """
     path = get_class(year, day)
-    subprocess.run(['java', '-classpath', BUILD_DIR, str(path), input_file])
+    subprocess.run(['java', *RUN_FLAGS, str(path), str(input_file)])
 
 
-def java_template(year: str, day: str, input_file: str):
+def java_template(year: str, day: str) -> None:
+    """
+    Templates a java source file for a given year and day.  The package for
+    the year must already exist.
+
+    :param year: year to create
+    :param day: day to create
+    """
     template = (
         f'package {PACKAGE}.x{year};\n',
         '\n',
@@ -54,21 +104,20 @@ def java_template(year: str, day: str, input_file: str):
         '    }\n'
         '}\n'
     )
+    input_file = str(Path('src').joinpath(get_class(year, day)).with_suffix('.java'))
 
     with open(input_file, 'w') as handle:
         handle.writelines(template)
 
 
-def main():
+def main() -> None:
+    # set up cli interface
     argument_parser = argparse.ArgumentParser(description='An advent of code build system')
     argument_parser.add_argument('directive', help='Run directive.  Possible options are [run, create]')
     argument_parser.add_argument('year', help='Year to run. Valid formats are 4 digit (2022) or 2 digit (22)')
     argument_parser.add_argument('day', help='Day to run')
     argument_parser.add_argument('--test', '-t', dest='test', action='store_true', help='Use the test input?')
     argument_parser.add_argument('--input', '-i', dest='input_file', help='Custom input file')
-    # TODO:
-    # clean (no args) to rm -r out/*
-    # compile (no args) to recursively compile the whole project
 
     args = argument_parser.parse_args()
     year = args.year
@@ -82,7 +131,7 @@ def main():
     if args.input_file is not None:
         input_file = args.input_file
     else:
-        input_file = str(get_input_path(year, day, args.test))
+        input_file = get_input_path(year, day, args.test)
 
     match args.directive:
         case 'run':
@@ -91,7 +140,7 @@ def main():
         case 'create':
             get_input_path(year, day, False).touch()
             get_input_path(year, day, True).touch()
-            java_template(year, day, str(Path('src').joinpath(get_class(year, day)).with_suffix('.java')))
+            java_template(year, day)
         case _:
             print('Invalid directive!')
             sys.exit(1)
