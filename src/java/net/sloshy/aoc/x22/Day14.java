@@ -16,6 +16,7 @@ public class Day14 {
             }
             return vertex;
         }));
+
         Utilities.printResult(day14.part1(), day14.part2());
     }
 
@@ -54,7 +55,7 @@ public class Day14 {
             return false;
         } else if (!cave.occupied(down)) {
             return placePart1(cave, down);
-        } else if (cave.occupied(down)) {
+        } else {
             if (!cave.occupied(left)) {
                 return placePart1(cave, left);
             } else if (!cave.occupied(right)) {
@@ -64,13 +65,13 @@ public class Day14 {
                 return true;
             }
         }
-        return false;
     }
 
     public Coordinate placePart2(Cave cave, Coordinate sand) {
         Coordinate down = new Coordinate(sand.x(), sand.y() + 1);
         Coordinate left = new Coordinate(sand.x() - 1, sand.y() + 1);
         Coordinate right = new Coordinate(sand.x() + 1, sand.y() + 1);
+
         if (!cave.occupied(down)) {
             return placePart2(cave, down);
         } else {
@@ -78,7 +79,7 @@ public class Day14 {
                 return placePart2(cave, left);
             } else if (!cave.occupied(right)) {
                 return placePart2(cave, right);
-            } else if (!cave.occupied(sand)){
+            } else if (!cave.occupied(sand)) {
                 cave.putSand(sand);
                 return sand;
             } else {
@@ -99,6 +100,7 @@ public class Day14 {
             sand = new HashSet<>();
             for (var vertex : rockVertices) {
                 for (int i = 0; i < vertex.size() - 1; i++) {
+                    // initialize with something reasonable
                     if (leftmost == null)
                         leftmost = vertex.get(i);
                     if (rightmost == null)
@@ -127,10 +129,10 @@ public class Day14 {
                     if (start.y() - end.y() == 0) {
                         // horizontal
                         boolean increasing = end.x() - start.x() > 0;
-                        for (int x = start.x(); increasing ? x <= end.x() : x >= end.x();) {
+                        for (int x = start.x(); increasing ? x <= end.x() : x >= end.x(); ) {
                             rocks.add(new Coordinate(x, start.y()));
 
-                            if (increasing){
+                            if (increasing) {
                                 x++;
                             } else {
                                 x--;
@@ -139,7 +141,7 @@ public class Day14 {
                     } else {
                         // vertical
                         boolean increasing = end.y() - start.y() > 0;
-                        for (int y = start.y(); increasing ? y <= end.y() : y >= end.y();) {
+                        for (int y = start.y(); increasing ? y <= end.y() : y >= end.y(); ) {
                             rocks.add(new Coordinate(start.x(), y));
                             if (increasing) {
                                 y++;
@@ -177,28 +179,9 @@ public class Day14 {
             return true;
         }
 
-        public boolean atFloor(Coordinate position) {
-            return position.y() >= lowest.y() + 1;
-        }
-
         public boolean occupied(Coordinate position) {
             // if there's something there, or it's on the floor
             return rockAt(position) || sandAt(position) || position.y() >= lowest.y() + 2;
-        }
-
-        public void printMap() {
-            for (int row = 0; row <= 9; row++) {
-                for (int column = 494; column <= 503; column++) {
-                    Coordinate c = new Coordinate(column, row);
-                    if (sandAt(c))
-                        System.out.print('o');
-                    else if (rockAt(c))
-                        System.out.print('#');
-                    else
-                        System.out.print('.');
-                }
-                System.out.println();
-            }
         }
     }
 }
