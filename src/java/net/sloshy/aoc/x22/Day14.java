@@ -16,24 +16,36 @@ public class Day14 {
             }
             return vertex;
         }));
-        Utilities.printResult(day14.part1(), 0);
+        Utilities.printResult(day14.part1(), day14.part2());
     }
 
     private List<List<Coordinate>> input;
+    private static final Coordinate origin = new Coordinate(500, 0);
+
 
     public Day14(List<List<Coordinate>> input) {
         this.input = input;
     }
+
     public int part1() {
         Cave cave = new Cave(input);
         int sandCount = 0;
-        while (placeSand(cave, new Coordinate(500, 0))) {
+        while (placePart1(cave, origin)) {
             sandCount++;
         }
         return sandCount;
     }
 
-    public boolean placeSand(Cave cave, Coordinate sand) {
+    public int part2() {
+        Cave cave = new Cave(input);
+        int sandCount = 0;
+        do {
+            sandCount++;
+        } while (!placePart2(cave, origin).equals(origin));
+        return sandCount;
+    }
+
+    public boolean placePart1(Cave cave, Coordinate sand) {
         Coordinate down = new Coordinate(sand.x(), sand.y() + 1);
         Coordinate left = new Coordinate(sand.x() - 1, sand.y() + 1);
         Coordinate right = new Coordinate(sand.x() + 1, sand.y() + 1);
@@ -41,18 +53,38 @@ public class Day14 {
         if (!cave.withinBounds(sand)) {
             return false;
         } else if (!cave.occupied(down)) {
-            return placeSand(cave, down);
+            return placePart1(cave, down);
         } else if (cave.occupied(down)) {
             if (!cave.occupied(left)) {
-                return placeSand(cave, left);
+                return placePart1(cave, left);
             } else if (!cave.occupied(right)) {
-                return placeSand(cave, right);
+                return placePart1(cave, right);
             } else {
                 cave.putSand(sand);
                 return true;
             }
         }
         return false;
+    }
+
+    public Coordinate placePart2(Cave cave, Coordinate sand) {
+        Coordinate down = new Coordinate(sand.x(), sand.y() + 1);
+        Coordinate left = new Coordinate(sand.x() - 1, sand.y() + 1);
+        Coordinate right = new Coordinate(sand.x() + 1, sand.y() + 1);
+        if (!cave.occupied(down)) {
+            return placePart2(cave, down);
+        } else {
+            if (!cave.occupied(left)) {
+                return placePart2(cave, left);
+            } else if (!cave.occupied(right)) {
+                return placePart2(cave, right);
+            } else if (!cave.occupied(sand)){
+                cave.putSand(sand);
+                return sand;
+            } else {
+                throw new RuntimeException("There's nowhere to put this sand 😭");
+            }
+        }
     }
 
     public class Cave {
@@ -145,8 +177,13 @@ public class Day14 {
             return true;
         }
 
+        public boolean atFloor(Coordinate position) {
+            return position.y() >= lowest.y() + 1;
+        }
+
         public boolean occupied(Coordinate position) {
-            return rockAt(position) || sandAt(position);
+            // if there's something there, or it's on the floor
+            return rockAt(position) || sandAt(position) || position.y() >= lowest.y() + 2;
         }
 
         public void printMap() {
