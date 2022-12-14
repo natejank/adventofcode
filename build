@@ -65,7 +65,7 @@ def find_source_files(source_root: Path, extension: str) -> list[Path]:
     return files
 
 
-def compile_java(*files: Path) -> None:
+def compile_java(*files: Path) -> bool:
     """
     Compiles java files given as arguments
 
@@ -73,7 +73,8 @@ def compile_java(*files: Path) -> None:
     """
     # convert path to string before compilation
     to_compile = [str(f) for f in files]
-    subprocess.run(['javac', *COMPILE_FLAGS, *to_compile])
+    outcome = subprocess.run(['javac', *COMPILE_FLAGS, *to_compile])
+    return outcome.returncode == 0
 
 
 def get_input_path(year: str, day: str, test: bool) -> Path:
@@ -121,9 +122,12 @@ def run_java(year: str, day: str, input_file) -> None:
     :param day: day to run
     :param input_file: input file to provide; Path or str
     """
-    compile_java(*find_java_files())
-    path = get_class(year, day)
-    subprocess.run(['java', *RUN_FLAGS, str(path), str(input_file)])
+    res = compile_java(*find_java_files())
+    if res:
+        path = get_class(year, day)
+        subprocess.run(['java', *RUN_FLAGS, str(path), str(input_file)])
+    else:
+        print('Java compilation failed!')
 
 
 def run_python(year: str, day: str, input_file) -> None:
