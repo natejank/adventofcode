@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # TODO:
-# clean (no args) to rm -r out/*
-# compile (no args) to recursively compile the whole project
-# autodetect which language to use for a given day
+#  autodetect which language was used for a given day
 import argparse
+import shutil
 import sys
 import subprocess
 from pathlib import Path
@@ -11,9 +10,10 @@ from pathlib import Path
 BUILD_DIR = 'out'
 COMPILE_FLAGS = ('-d', BUILD_DIR)
 RUN_FLAGS = ('-classpath', BUILD_DIR)
-PACKAGE = 'net.sloshy.aoc'
+JAVA_PACKAGE = 'net.sloshy.aoc'
 JAVA_SOURCE_FOLDER = Path('src', 'java')
 PYTHON_SOURCE_FOLDER = Path('src', 'python')
+DEFAULT_LANGUAGE = 'JAVA'
 
 
 def find_java_files(source_root=JAVA_SOURCE_FOLDER) -> list[Path]:
@@ -70,6 +70,7 @@ def compile_java(*files: Path) -> bool:
     Compiles java files given as arguments
 
     :param files: string paths to compile
+    :return: true if the files compiled successfully
     """
     # convert path to string before compilation
     to_compile = [str(f) for f in files]
@@ -100,7 +101,7 @@ def get_class(year: str, day: str) -> Path:
     :param day: day of class
     :return: Path to class file
     """
-    return Path(*PACKAGE.split('.')).joinpath(f'x{year}').joinpath(f'Day{day}')
+    return Path(*JAVA_PACKAGE.split('.')).joinpath(f'x{year}').joinpath(f'Day{day}')
 
 
 def get_python_file(year: str, day: str) -> Path:
@@ -114,6 +115,27 @@ def get_python_file(year: str, day: str) -> Path:
     return PYTHON_SOURCE_FOLDER.joinpath(f'x{year}').joinpath(f'day{day}.py')
 
 
+def clean_build_directory(build_dir=Path(BUILD_DIR), no_confirm=False) -> None:
+    """
+    Removes build directory contents, with user confirmation
+
+    :param build_dir: directory to use
+    :param no_confirm: Prompt user to delete directory?
+    """
+    can_remove = no_confirm
+    if not can_remove:
+        # be very careful we're not removing the wrong thing
+        print(f'Ok to remove all subdirectories inside {str(build_dir)}?')
+        print(f'Full path is {str(build_dir.absolute())}')
+        can_remove = input('OK to remove? [y/N]: ') == 'y'
+
+    if can_remove:
+        shutil.rmtree(build_dir)
+        build_dir.mkdir()
+    else:
+        print('Aborting.')
+
+
 def run_java(year: str, day: str, input_file) -> None:
     """
     Runs java class for a given year and day
@@ -122,8 +144,8 @@ def run_java(year: str, day: str, input_file) -> None:
     :param day: day to run
     :param input_file: input file to provide; Path or str
     """
-    res = compile_java(*find_java_files())
-    if res:
+    success = compile_java(*find_java_files())
+    if success:
         path = get_class(year, day)
         subprocess.run(['java', *RUN_FLAGS, str(path), str(input_file)])
     else:
@@ -151,11 +173,11 @@ def java_template(year: str, day: str) -> None:
     :param day: day to create
     """
     template = (
-        f'package {PACKAGE}.x{year};\n',
+        f'package {JAVA_PACKAGE}.x{year};\n',
         '\n',
         'import java.util.*;\n',
         '\n',
-        f'import {PACKAGE}.common.Utilities;\n',
+        f'import {JAVA_PACKAGE}.common.Utilities;\n',
         '\n',
         f'public class Day{day} {{\n',
         '    public static void main(String[] args) {\n'
@@ -169,43 +191,91 @@ def java_template(year: str, day: str) -> None:
         handle.writelines(template)
 
 
+def truncate_year(year: str) -> str:
+    """
+    Ensure year is two-digit
+
+    :param year: 2 or 4 digit year
+    :return: 2 digit year
+    """
+    return year if len(year) != 4 else year[2:]
+
+
 def main() -> None:
     # set up cli interface
-    argument_parser = argparse.ArgumentParser(description='An advent of code build system')
-    argument_parser.add_argument('directive', help='Run directive.  Possible options are [run, create]')
-    argument_parser.add_argument('year', help='Year to run. Valid formats are 4 digit (2022) or 2 digit (22)')
-    argument_parser.add_argument('day', help='Day to run')
-    argument_parser.add_argument('--test', '-t', dest='test', action='store_true', help='Use the test input?')
-    argument_parser.add_argument('--python', '-p', dest='use_python', action='store_true',
-                                 help='Run the python implementation for a given day?')
-    argument_parser.add_argument('--java', '-j', dest='use_java', action='store_true',
-                                 help='Run the java implementation for a given day?')
-    argument_parser.add_argument('--input', '-i', dest='input_file', help='Custom input file')
+    argument_parser = argparse.ArgumentParser(description='An advent of code build system 🎄')
+    subparsers = argument_parser.add_subparsers(dest='directive')
+
+    # clean
+    clean_parser = subparsers.add_parser('clean', help='Remove build artifacts from build directory')
+    clean_parser.add_argument('-y', '--yes', dest='clean_no_confirm', action='store_true',
+                              help='Confirm deletion automatically')
+
+    # build
+    build_parser = subparsers.add_parser('compile', help='Compile source without running anything')
+    # explicit language switches
+    build_language_selection = build_parser.add_mutually_exclusive_group()
+    build_language_selection.add_argument('-j', '--java', dest='language_selection', action='store_const',
+                                          const='JAVA', help='Create java source')
+
+    # create
+    create_parser = subparsers.add_parser('create', help='Create input and source files for a given day')
+    create_parser.add_argument('year', help='Year to run. Valid formats are 4 digit (2022) or 2 digit (22)')
+    create_parser.add_argument('day', help='Day to run')
+    create_language_selection = create_parser.add_mutually_exclusive_group()
+    create_language_selection.add_argument('-j', '--java', dest='language_selection', action='store_const',
+                                           const='JAVA', help='Create java source')
+
+    # run
+    run_parser = subparsers.add_parser('run', help='Compile (if needed) and run a given day')
+    run_parser.add_argument('year', help='Year to run. Valid formats are 4 digit (2022) or 2 digit (22)')
+    run_parser.add_argument('day', help='Day to run')
+    run_parser.add_argument('--test', '-t', dest='use_test_input', action='store_true', help='Use the test input')
+    run_parser.add_argument('--input', '-i', dest='input_file', help='Custom input file')
+    run_language_selection = run_parser.add_mutually_exclusive_group()
+    run_language_selection.add_argument('-j', '--java', dest='language_selection', action='store_const',
+                                        const='JAVA', help='Use java')
+    run_language_selection.add_argument('-p', '--python', dest='language_selection', action='store_const',
+                                        const='PYTHON', help='Use python')
 
     args = argument_parser.parse_args()
-    year = args.year
-    day = args.day
-    if args.use_python:
-        language = 'PYTHON'
+
+    # language detection
+    if 'language_selection' in vars(args) \
+            and args.language_selection is not None:
+        language = args.language_selection
     else:
-        language = 'JAVA'
+        language = DEFAULT_LANGUAGE
 
-    # truncate year to 2 digits
-    if len(year) > 2:
-        year = year[2:]
-
-    # find input file
-    if args.input_file is not None:
-        input_file = args.input_file
-    else:
-        input_file = get_input_path(year, day, args.test)
-
+    # handle commands
     match args.directive:
+        case 'clean':
+            clean_build_directory(no_confirm=args.clean_no_confirm)
+        case 'compile':
+            success = True
+            match language:
+                case 'JAVA':
+                    success = compile_java()
+            if success:
+                print('Compiled successfully.')
+            else:
+                print('Failed to compile!')
         case 'run':
+            year = truncate_year(args.year)
+            day = args.day
+            # find input file
+            if args.input_file is not None:
+                input_file = args.input_file
+            else:
+                input_file = get_input_path(year, day, args.use_test_input)
             match language:
                 case 'JAVA': run_java(year, day, input_file)
                 case 'PYTHON': run_python(year, day, input_file)
+                case _: print(f'Invalid language {language}!')
         case 'create':
+            year = truncate_year(args.year)
+            day = args.day
+
             get_input_path(year, day, False).touch()
             get_input_path(year, day, True).touch()
             # templating
