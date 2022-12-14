@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="2022 Day 10 (Test)" type="Application" factoryName="Application" folderName="2022">
-    <option name="MAIN_CLASS_NAME" value="net.sloshy.aoc.x22.Day10" />
+    <option name="MAIN_CLASS_NAME" value="java.aoc.x22.Day10" />
     <module name="aoc" />
     <option name="PROGRAM_PARAMETERS" value="lib/2022/day10_test.input.txt" />
     <method v="2">

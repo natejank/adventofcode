@@ -3,6 +3,7 @@ import sys
 
 
 def main(input_file: str):
+    # parse input file
     packets = []
     with open(input_file) as handle:
         for line in handle:
@@ -11,8 +12,8 @@ def main(input_file: str):
             else:
                 packets.append(eval(line))
 
-    print(part1(packets))
-    print(part2(packets))
+    print(f'Part 1: {part1(packets)}')
+    print(f'Part 2: {part2(packets)}')
 
 
 def part1(packets):
@@ -45,7 +46,7 @@ def part2(packets):
                 sorted_packets.insert(i, divider)
                 divider_positions.append(i + 1)
                 break
-                
+
     return divider_positions[0] * divider_positions[1]
 
 

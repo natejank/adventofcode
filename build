@@ -2,6 +2,7 @@
 # TODO:
 # clean (no args) to rm -r out/*
 # compile (no args) to recursively compile the whole project
+# autodetect which language to use for a given day
 import argparse
 import sys
 import subprocess
@@ -11,13 +12,43 @@ BUILD_DIR = 'out'
 COMPILE_FLAGS = ('-d', BUILD_DIR)
 RUN_FLAGS = ('-classpath', BUILD_DIR)
 PACKAGE = 'net.sloshy.aoc'
+JAVA_SOURCE_FOLDER = Path('src', 'java')
+PYTHON_SOURCE_FOLDER = Path('src', 'python')
 
 
-def find_java_files(source_root=Path('src')) -> list[Path]:
+def find_java_files(source_root=JAVA_SOURCE_FOLDER) -> list[Path]:
     """
-    Recursively crawls filesystem from a root to find java source files.
-    By default, this starts at ./src
+    Finds all java files from a given root
 
+    :param source_root: root of search, default src/java
+    :return: all java files from a starting point
+
+    See Also
+    ---
+    find_source_files
+    """
+    return find_source_files(source_root, '*.java')
+
+
+def find_python_files(source_root=PYTHON_SOURCE_FOLDER):
+    """
+    Finds all python files from a given root
+
+    :param source_root: root of search, default src/python
+    :return: all java files from a starting point
+
+    See Also
+    ---
+    find_source_files
+    """
+    return find_source_files(source_root, '*.py')
+
+
+def find_source_files(source_root: Path, extension: str) -> list[Path]:
+    """
+    Recursively crawls filesystem from a root to find source files.
+
+    :param extension:
     :param source_root: the root to crawl from
     :return: list of paths to java files, with source_root as the start of the path
     """
@@ -28,7 +59,7 @@ def find_java_files(source_root=Path('src')) -> list[Path]:
         for path in directory.iterdir():
             if path.is_dir() and path not in paths:
                 paths.append(path)
-        for file in directory.glob('*.java'):
+        for file in directory.glob(extension):
             if file not in files:
                 files.append(file)
     return files
@@ -71,16 +102,40 @@ def get_class(year: str, day: str) -> Path:
     return Path(*PACKAGE.split('.')).joinpath(f'x{year}').joinpath(f'Day{day}')
 
 
-def run_day(year: str, day: str, input_file) -> None:
+def get_python_file(year: str, day: str) -> Path:
     """
-    Runs the class for a given year and day
+    Gets a filesystem path to a python executable.
+
+    :param year: year of file
+    :param day: day of file
+    :return: path to executable
+    """
+    return PYTHON_SOURCE_FOLDER.joinpath(f'x{year}').joinpath(f'day{day}.py')
+
+
+def run_java(year: str, day: str, input_file) -> None:
+    """
+    Runs java class for a given year and day
 
     :param year: year to run
     :param day: day to run
-    :param input_file: The input file to provide; Path or str
+    :param input_file: input file to provide; Path or str
     """
+    compile_java(*find_java_files())
     path = get_class(year, day)
     subprocess.run(['java', *RUN_FLAGS, str(path), str(input_file)])
+
+
+def run_python(year: str, day: str, input_file) -> None:
+    """
+    Runs a python file for a given year and day
+
+    :param year: year to run
+    :param day: day to run
+    :param input_file: input file to provide; path or str
+    """
+    path = get_python_file(year, day)
+    subprocess.run([sys.executable, str(path), str(input_file)])
 
 
 def java_template(year: str, day: str) -> None:
@@ -104,7 +159,7 @@ def java_template(year: str, day: str) -> None:
         '    }\n'
         '}\n'
     )
-    input_file = str(Path('src').joinpath(get_class(year, day)).with_suffix('.java'))
+    input_file = str(JAVA_SOURCE_FOLDER.joinpath(get_class(year, day)).with_suffix('.java'))
 
     with open(input_file, 'w') as handle:
         handle.writelines(template)
@@ -117,11 +172,19 @@ def main() -> None:
     argument_parser.add_argument('year', help='Year to run. Valid formats are 4 digit (2022) or 2 digit (22)')
     argument_parser.add_argument('day', help='Day to run')
     argument_parser.add_argument('--test', '-t', dest='test', action='store_true', help='Use the test input?')
+    argument_parser.add_argument('--python', '-p', dest='use_python', action='store_true',
+                                 help='Run the python implementation for a given day?')
+    argument_parser.add_argument('--java', '-j', dest='use_java', action='store_true',
+                                 help='Run the java implementation for a given day?')
     argument_parser.add_argument('--input', '-i', dest='input_file', help='Custom input file')
 
     args = argument_parser.parse_args()
     year = args.year
     day = args.day
+    if args.use_python:
+        language = 'PYTHON'
+    else:
+        language = 'JAVA'
 
     # truncate year to 2 digits
     if len(year) > 2:
@@ -135,12 +198,15 @@ def main() -> None:
 
     match args.directive:
         case 'run':
-            compile_java(*find_java_files())
-            run_day(year, day, input_file)
+            match language:
+                case 'JAVA': run_java(year, day, input_file)
+                case 'PYTHON': run_python(year, day, input_file)
         case 'create':
             get_input_path(year, day, False).touch()
             get_input_path(year, day, True).touch()
-            java_template(year, day)
+            # templating
+            match language:
+                case 'JAVA': java_template(year, day)
         case _:
             print('Invalid directive!')
             sys.exit(1)
