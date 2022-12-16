@@ -12,12 +12,10 @@ public class Day15 {
         Utilities.printResult(day15.part1(), 0);
     }
 
-    private Set<Coordinate> beacons;
-    private Set<Coordinate> sensors;
+    private List<BeaconSensor> pairs;
 
     public Day15(List<String> input) {
-        beacons = new HashSet<>();
-        sensors = new HashSet<>();
+        pairs = new LinkedList<>();
 
         for (String line : input) {
             String[] parts = line.split(":");
@@ -26,60 +24,43 @@ public class Day15 {
                     Integer.parseInt(sensorInput[2].split("=")[1].replace(",", "")),
                     Integer.parseInt(sensorInput[3].split("=")[1])
             );
-            sensors.add(sensor);
             String[] beaconInput = parts[1].split(" ");
             Coordinate beacon = new Coordinate(
                     Integer.parseInt(beaconInput[5].split("=")[1].replace(",", "")),
                     Integer.parseInt(beaconInput[6].split("=")[1])
             );
-            beacons.add(beacon);
+
+            pairs.add(new BeaconSensor(beacon, sensor));
         }
     }
 
     public int part1() {
-        int count = 0;
         Set<Coordinate> area = new HashSet<>();
-        for (Coordinate sensor : sensors) {
-            area.addAll(computeArea(sensor));
-        }
-        for (Coordinate a : area)
-//            if (a.y() == 10)
-            if (a.y() == 2000000)
-                count++;
-        return count;
+        for (var bs : pairs)
+//            area.addAll(bs.getAreaAtY(10));
+            area.addAll(bs.getAreaAtY(2000000));
+        return area.size() - 1;
     }
 
-    private Set<Coordinate> computeArea(Coordinate sensor) {
-        Set<Coordinate> area = new HashSet<>();
-        Queue<Coordinate> toScan = new LinkedList<>();
+    private record BeaconSensor(Coordinate beacon, Coordinate sensor) {
+        private int getManhattanDistance() {
+            int deltaX = beacon.x() - sensor.x();
+            int deltaY = beacon.y() - sensor.y();
+            return Math.abs(deltaX) + Math.abs(deltaY);
+        }
 
-        toScan.add(sensor);
-        while (!toScan.isEmpty()) {
-            Coordinate scan = toScan.remove();
-            if (beacons.contains(scan)) {
-                area.remove(scan);
-                break;
-            }
-            for (Coordinate neighbor : getNeighbors(scan)) {
-                if (!area.contains(neighbor)) {
-                    area.add(neighbor);
-                    toScan.add(neighbor);
+        private Set<Coordinate> getAreaAtY(int y) {
+            int quantity = getManhattanDistance() - Math.abs(sensor.y() - y);
+            Set<Coordinate> coordinates = new HashSet<>();
+
+            if (quantity > 0) {
+                for (int x = sensor.x() - quantity; x <= sensor.x() + quantity; x++) {
+                    coordinates.add(new Coordinate(x, y));
                 }
             }
+            return coordinates;
         }
-        return area;
-    }
 
-    private List<Coordinate> getNeighbors(Coordinate coord) {
-        List<Coordinate> neighbors = new LinkedList<>();
-
-        neighbors.add(coord);
-        neighbors.add(new Coordinate(coord.x() + 1, coord.y()));
-        neighbors.add(new Coordinate(coord.x() - 1, coord.y()));
-        neighbors.add(new Coordinate(coord.x(), coord.y() + 1));
-        neighbors.add(new Coordinate(coord.x() , coord.y() - 1));
-
-        return neighbors;
     }
 
 
