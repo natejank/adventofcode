@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # TODO:
 #  autodetect which language was used for a given day
+#  this project is not Y2K compatible :(
 import argparse
 import shutil
 import sys
