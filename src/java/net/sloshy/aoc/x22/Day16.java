@@ -7,13 +7,14 @@ import net.sloshy.aoc.common.search.SearchState;
 
 public class Day16 {
     public static void main(String[] args) {
-        
+
     }
 
     private class Solver {
         private int solve() {
             Queue<CaveState> priority = new PriorityQueue<>(Collections.reverseOrder());
 
+            return 0;
         }
     }
 
@@ -31,17 +32,19 @@ public class Day16 {
         }
 
         private CaveState(CaveState parent, String position, boolean open) {
-            this.valves = parent.valves;
-            this.position = position;
-            if (open) {
-                this.valves.get(position).
-            }
+            this(parent.valves);
+            // this.valves = parent.valves;
+            // this.position = position;
+            // if (open) {
+            //     // this.valves.get(position).
+            // }
         }
 
         public List<CaveState> getNeighbors() {
             for (String neighbor : valves.keySet()) {
 
             }
+            return null;
         }
 
         public int getWeight() {
